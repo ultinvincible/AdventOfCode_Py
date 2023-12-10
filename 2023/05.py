@@ -36,6 +36,6 @@ def run(input_data: str):
                 if start > end:
                     continue
                 new_ranges.append((start + conv_range[2], end + conv_range[2]))
-        ranges = copy.deepcopy(new_ranges)
+        ranges = new_ranges
     part2 = min(ranges, key=lambda r: r[0])[0]
     return part1, part2

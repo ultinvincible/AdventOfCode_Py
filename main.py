@@ -64,7 +64,6 @@ if __name__ == '__main__':
             html = re.split(f'<main>\n<article><p>|</p></article>\n</main>', response.content.decode("utf-8"))[1]
             html = re.split(f'<a href=\"/{year}/day/{day}| You can ', html)[0]
             print(''.join(re.split('[<>]', html)[::2]))
-        #     <a href=\"/20{year}/day/{day}
 
         day = input(f'Run 20{year} day: ')
         if day.isdecimal() and 1 <= int(day) <= 25:
