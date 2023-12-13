@@ -3,11 +3,9 @@ import math
 
 def run(input_data: str):
     part1 = 1
-    part2 = 0
     lines = input_data.splitlines()
     time = [int(value) for value in lines[0].split()[1:]]
     distance = [int(value) for value in lines[1].split()[1:]]
-    # t(T-t)=S => t^2 -Tt + S = 0 => t = (T +- sqrt(T^2 - 4S))/2
     for i in range(len(time)):
         ways = calc_ways(distance[i], time[i])
         part1 *= ways
@@ -19,6 +17,7 @@ def run(input_data: str):
     return part1, part2
 
 
+# t(T-t)=S => t^2 -Tt + S = 0 => t = (T +- sqrt(T^2 - 4S))/2
 def calc_ways(distance, time):
     time_record = (time - math.sqrt(math.pow(time, 2) - 4 * distance)) / 2
     ways = (math.ceil(time / 2) - math.ceil(time_record)) * 2
