@@ -6,6 +6,18 @@ import requests
 
 baseUrl = 'https://adventofcode.com/'
 
+
+def run_day(year, day):
+    path = f'Inputs/{year}{str(day).zfill(2)}.txt'
+    with open(path, 'a') as file:
+        if os.stat(path).st_size == 0:
+            response = requests.get(f'{baseUrl}20{year}/day/{day}/input',
+                                    cookies={"session": sessionToken})
+            file.write(response.content.decode("utf-8"))
+    input_data = open(path, 'r').read()
+    return getattr(moduleDict[year, day], 'run')(input_data)
+
+
 if __name__ == '__main__':
     now = datetime.datetime.now()
     year = now.year - 2001
@@ -37,15 +49,7 @@ if __name__ == '__main__':
             open(path, 'a').write(template)
             break
 
-        path = f'Inputs/{year}{str(day).zfill(2)}.txt'
-        with open(path, 'a') as file:
-            if os.stat(path).st_size == 0:
-                response = requests.get(f'{baseUrl}20{year}/day/{day}/input',
-                                        cookies={"session": sessionToken})
-                file.write(response.content.decode("utf-8"))
-
-        inputData = open(path, 'r').read()
-        result = getattr(moduleDict[year, day], 'run')(inputData)
+        result = run_day(year, day)
         print(f'{result[0]}\n{result[1]}')
 
         if input('Input \'y\' to submit: ') == 'y':
@@ -66,6 +70,13 @@ if __name__ == '__main__':
             print(''.join(re.split('[<>]', html)[::2]))
 
         day = input(f'Run 20{year} day: ')
+        if day == 'all':
+            for d in range(1, 26):
+                if (year, d) in moduleDict.keys():
+                    print(f'Day {d}:')
+                    result = run_day(year, d)
+                    print(f'{result[0]}\n{result[1]}\n')
+            day = input(f'Run 20{year} day: ')
         if day.isdecimal() and 1 <= int(day) <= 25:
             day = int(day)
         else:
