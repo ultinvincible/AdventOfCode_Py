@@ -4,7 +4,7 @@ import os
 import re
 import requests
 
-baseUrl = "https://adventofcode.com/"
+base_url = "https://adventofcode.com/"
 
 
 def run_day(year, day):
@@ -12,7 +12,7 @@ def run_day(year, day):
     with open(path, "a") as file:
         if os.stat(path).st_size == 0:
             response = requests.get(
-                f"{baseUrl}20{year}/day/{day}/input", cookies={"session": sessionToken}
+                f"{base_url}20{year}/day/{day}/input", cookies={"session": sessionToken}
             )
             file.write(response.content.decode("utf-8"))
     input_data = open(path, "r").read()
@@ -63,13 +63,13 @@ if __name__ == "__main__":
                 "From": "trinhminhkhanh278@gmail.com",
             }
             response = requests.post(
-                f"{baseUrl}20{year}/day/{day}/answer",
+                f"{base_url}20{year}/day/{day}/answer",
                 data=data,
                 cookies={"session": sessionToken},
                 headers=headers,
             )
             html = re.split(
-                f"<main>\n<article><p>|</p></article>\n</main>",
+                "<main>\n<article><p>|</p></article>\n</main>",
                 response.content.decode("utf-8"),
             )[1]
             html = re.split(f'<a href="/{year}/day/{day}| You can ', html)[0]
@@ -78,7 +78,7 @@ if __name__ == "__main__":
         day = input(f"Run 20{year} day: ")
         if day == "all":
             for d in range(1, 26):
-                if (year, d) in moduleDict.keys():
+                if (year, d) in moduleDict:
                     print(f"Day {d}:")
                     result = run_day(year, d)
                     print(f"{result[0]}\n{result[1]}\n")
