@@ -12,7 +12,7 @@ def run(input_data: str):
         bid = int(split[1])
         count_dict = {}
         for card in hand:
-            if card in count_dict.keys():
+            if card in count_dict:
                 count_dict[card] += 1
             else:
                 count_dict[card] = 1
@@ -27,7 +27,7 @@ def run(input_data: str):
         for c, card in enumerate(hand):
             if card == 'J':
                 hand_values[c] = 1
-        if 'J' in count_dict.keys() and count[0] != 5:
+        if 'J' in count_dict and count[0] != 5:
             j_count = count_dict['J']
             i = 0 if j_count != count[0] else 1
             hand_type = (count[i] + j_count - 1) * 2

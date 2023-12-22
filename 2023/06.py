@@ -6,12 +6,12 @@ def run(input_data: str):
     lines = input_data.splitlines()
     time = [int(value) for value in lines[0].split()[1:]]
     distance = [int(value) for value in lines[1].split()[1:]]
-    for i in range(len(time)):
-        ways = calc_ways(distance[i], time[i])
+    for s, t in zip(distance, time):
+        ways = calc_ways(s, t)
         part1 *= ways
 
-    time = int(''.join([str(t) for t in time]))
-    distance = int(''.join([str(s) for s in distance]))
+    time = int("".join([str(t) for t in time]))
+    distance = int("".join([str(s) for s in distance]))
     part2 = calc_ways(distance, time)
 
     return part1, part2
