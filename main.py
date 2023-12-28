@@ -2,12 +2,13 @@ import datetime
 import importlib.util
 import os
 import re
+import time
 import requests
 
 base_url = "https://adventofcode.com/"
 
 
-def run_day(year, day):
+def run_day(year, day, measure_time=False):
     path = f"Inputs/{year}{str(day).zfill(2)}.txt"
     with open(path, "a") as file:
         if os.stat(path).st_size == 0:
@@ -16,7 +17,13 @@ def run_day(year, day):
             )
             file.write(response.content.decode("utf-8"))
     input_data = open(path, "r").read()
-    return getattr(moduleDict[year, day], "run")(input_data)
+    run = getattr(moduleDict[year, day], "run")
+    if measure_time:
+        start = time.time()
+        results = run(input_data)
+        end = time.time()
+        return results, end - start
+    return run(input_data)
 
 
 if __name__ == "__main__":
@@ -24,6 +31,8 @@ if __name__ == "__main__":
     year = now.year - 2001
     if now.month == 12:
         year += 1
+    with open("sessionToken.py") as file:
+        sessionToken = file.read()
 
     moduleDict = {}
     for filename in os.listdir(f"20{year}"):
@@ -41,8 +50,6 @@ if __name__ == "__main__":
 
     day = max(moduleDict.keys())[1]
 
-    sessionToken = open("sessionToken.txt").read()
-
     print(f"Run 20{year} day: {day}")
     while True:
         path = f"20{year}/{str(day).zfill(2)}.py"
@@ -52,8 +59,8 @@ if __name__ == "__main__":
             print("File created.")
             break
 
-        result = run_day(year, day)
-        print(f"{result[0]}\n{result[1]}")
+        result, runtime = run_day(year, day, True)
+        print(f"{result[0]}\n{result[1]}\nRuntime: {round(runtime, 2)} s")
 
         if input("Input 'y' to submit: ") == "y":
             part = 2 if result[1] != 0 else 1
