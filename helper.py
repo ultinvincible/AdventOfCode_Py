@@ -1,6 +1,7 @@
 from typing import Callable, Hashable, NamedTuple
 import heapq
 
+directions = [(0, 1), (-1, 0), (0, -1), (1, 0)]
 
 def neighbors_2d(point, bounds) -> dict[tuple[int, int], tuple[int, int]]:
     (row, col) = point
@@ -15,12 +16,12 @@ def neighbors_2d(point, bounds) -> dict[tuple[int, int], tuple[int, int]]:
 def dijkstra(
     get_neighbors: Callable[[Hashable], list[tuple[Hashable, int]]],
     start,
+    is_destination: None | Callable[[Hashable], bool] = None,
     get_set_node: None
     | tuple[
         Callable[[Hashable], tuple[Hashable, int, bool]],
         Callable[[Hashable, tuple[Hashable, int, bool]], None],
     ] = None,
-    is_destination: None | Callable[[Hashable], bool] = None,
 ):
     if get_set_node is not None:
         (get_node, set_node) = get_set_node
@@ -47,25 +48,25 @@ def dijkstra(
     ) != 0:
         cost, current = heapq.heappop(to_visit_heap)
         prev, current_cost, visited = get_node(current)
-        if visited or cost > current_cost:
+        if visited:
             continue
 
         for nei, cost in get_neighbors(current):
             nei_node = get_node(nei)
+            # A* would skip this check, but the heuristic has to be good enough:
             if nei_node[2]:
                 continue
             new_cost = current_cost + cost
             if new_cost < nei_node[1]:
                 set_node(nei, (current, new_cost, False))
-            heapq.heappush(
-                to_visit_heap,
-                (
-                    min(
-                        new_cost, nei_node[1] if nei_node is not None else float("inf")
+                heapq.heappush(
+                    to_visit_heap,
+                    (
+                        # A* heuristic would be added here: new_cost + h(nei)
+                        new_cost,
+                        nei,
                     ),
-                    nei,
-                ),
-            )
+                )
 
         set_node(current, (prev, current_cost, True))
 
