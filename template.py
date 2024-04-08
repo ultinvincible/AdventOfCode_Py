@@ -1,10 +1,13 @@
 def run(input_data: str):
     part1 = 0
     part2 = 0
-    x_map = [list(s) for s in input_data.splitlines()]
-    for i, line in enumerate(input_data.splitlines()):
-        pass
-    for s, section in enumerate(input_data.split("\n\n")):
+
+    _map = [list(s) for s in input_data.splitlines()]
+    for row, line in enumerate(_map):
+        for col, point in enumerate(line):
+            pass
+    sections = input_data.split("\n\n")
+    for s, sect in enumerate(sections):
         pass
 
     return part1, part2
