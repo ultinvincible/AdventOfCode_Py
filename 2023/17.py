@@ -5,10 +5,10 @@ def run(input_data: str):
     city_map = [[int(i) for i in list(s)] for s in input_data.splitlines()]
     col_row_view = list(zip(*city_map))
     lengths = [len(city_map), len(city_map[0])]
-    (max_straight, min_straight) = (1, 1)
+    max_straight, min_straight = 1, 1
 
     def next_states(state):
-        (point, drt, consecutive) = state
+        point, drt, consecutive = state
         neis = neighbors_2d(point, lengths)
         if drt is not None:
             neis.pop((-drt[0], -drt[1]))
@@ -38,40 +38,26 @@ def run(input_data: str):
 
         return result
 
-    # def get_node(state):
-    #     try:
-    #         return state_map[state[0][0]][state[0][1]][tuple(state[1:])]
-    #     except KeyError:
-    #         return (None, float("inf"), False)
-
-    # def set_node(state, node):
-    #     state_map[state[0][0]][state[0][1]][tuple(state[1:])] = node
-
     parts = []
     for max_straight, min_straight in [(3, 1), (10, 4)]:
-        # state_map = [[{} for _ in city_map[0]] for _ in city_map]
         state_tree = dijkstra(next_states, ((0, 0), None, 0))
         end_states = [
-            ((point, _, cons), cost)
-            for (point, _, cons), (_, cost, _) in state_tree.items()
-            if point == (lengths[0] - 1, lengths[1] - 1) and cons >= min_straight
+            ((point, drt, cons), cost)
+            for (point, drt, cons), (_, cost, _) in state_tree.items()
+            if point == (lengths[0] - 1, lengths[1] - 1)
         ]
         costs = [state[1] for state in end_states]
-        i = costs.index(min(costs))
-        parts.append(costs[i])
+        parts.append(min(costs))
 
-        # state = end_states[i][0]
-        # # path = []
-        # while state is not None:
-        #     # path.append(state)
-        #     print(f"{state}\t{state_tree[state][1]}")
-        #     state = state_tree[state][0]
-        # # for row, line in enumerate(city_map):
-        # #     for col, point in enumerate(line):
-        # #         if (row, col) in path:
-        # #             print(".", end="")
-        # #         else:
-        # #             print(point, end="")
-        # #     print()
+        # with open("output", "w") as file:
+        #     if max_straight == 3:
+        #         continue
+
+        #     # print(end_states)
+        #     state = end_states[costs.index(min(costs))][0]
+        #     while state is not None:
+        #         prev_state = state_tree[state]
+        #         print(f"{str(state):30}\t{prev_state[1]}", file=file)
+        #         state = prev_state[0]
 
     return tuple(parts)

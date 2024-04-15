@@ -19,10 +19,11 @@ def run(input_data: str):
         move, from_, to = tuple(int(s) for s in line.split() if s.isdecimal())
         from_ -= 1
         to -= 1
-        stacks1[to] += list(stacks1[from_][-1 : -move - 1 : -1])
-        del stacks1[from_][-move:]
 
-        stacks2[to] += list(stacks2[from_][-move:])
-        del stacks2[from_][-move:]
+        stacks1[to] += stacks1[from_][-1 : -move - 1 : -1]
+        stacks1[from_] = stacks1[from_][:-move]
+
+        stacks2[to] += stacks2[from_][-move:]
+        stacks2[from_] = stacks2[from_][:-move]
 
     return "".join(stk[-1] for stk in stacks1), "".join(stk[-1] for stk in stacks2)

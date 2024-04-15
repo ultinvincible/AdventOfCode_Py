@@ -1,5 +1,5 @@
-from typing import Callable, Hashable
 import heapq
+from typing import Callable, Hashable
 
 directions = [(0, 1), (-1, 0), (0, -1), (1, 0)]
 diagonals = [(1, 1), (1, -1), (-1, 1), (-1, -1)]
@@ -8,10 +8,21 @@ diagonals = [(1, 1), (1, -1), (-1, 1), (-1, -1)]
 def neighbors_2d(
     point: tuple[int, int], bounds: tuple[int, int], diagonal=False
 ) -> dict[tuple[int, int], tuple[int, int]]:
-    (row, col) = point
+    """On a 2D square grid/table/matrix, generates neighbors for a point.
+
+    Args:
+        point: The 2D point, represented by tuple(row,col)
+        bounds: Higher bounds for row and col
+        diagonal: Include diagonal neighbors, defaults to False
+
+    Returns:
+        dict[tuple[int, int], tuple[int, int]]: Mapping of directions to neighbors.
+    """
+    row, col = point
     neis = {}
     for r, c in directions if not diagonal else directions + diagonals:
-        nei = (row + r, col + c)
+        nei = row + r, col + c
+        # Reminder that try except IndexError doesnt work because negative indices are allowed.
         if all(0 <= nei[i] < bounds[i] for i in (0, 1)):
             neis[r, c] = nei
     return neis
@@ -22,27 +33,29 @@ def dijkstra(
     start: Hashable,
     is_destination: None | Callable[[Hashable], bool] = None,
     get_set_node: (
-        None
-        | tuple[
+        tuple[
             Callable[[Hashable], tuple[Hashable, int, bool]],
             Callable[[Hashable, tuple[Hashable, int, bool]], None],
         ]
+        | None
     ) = None,
 ) -> dict[Hashable, tuple[Hashable, int, bool]] | None:
-    """A dynamic implementation of Dijkstra's algorithm, supporting infinite graphs (uniform cost search) and manages nodes using keys.\n
-    Stores nodes in a dict by default.\n
-    Each node is represented by a tuple: (\n
-        Key of the previous node in the minimum cost path: Hashable,\n
-        The current minimum cost: int,\n
-        Whether the node has been visited: bool\n
-    ).\n
+    """A dynamic implementation of Dijkstra's algorithm, supporting infinite graphs (uniform cost search) and manages nodes using keys.
 
-    Keyword arguments:\n
-    get_neighbors -- Function to find all neighbors of the node with the given key\n
-    start -- Key of the starting node\n
-    is_destination -- Function to check if the algorithm should end at the current node\n
-    get_set_node -- Tuple of functions to get and set node value from key\n
-    Return: Dict of keys to nodes if get_set_node is not specified, else None.
+    Stores nodes in a dict by default. Each node is represented by a tuple: (
+        Key of the previous node in the minimum cost path: Hashable,
+        The current minimum cost: int,
+        Whether the node has been visited: bool
+    )
+
+    Args:
+        get_neighbors: Function to find all neighbors of the node with the given key
+        start: Key of the starting node
+        is_destination: Function to check if the algorithm should end at the current node
+        get_set_node: Tuple of functions to get and set node value from key
+
+    Returns:
+        Dict of keys to nodes if get_set_node is not specified, else None.
     """
 
     if get_set_node:
