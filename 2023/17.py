@@ -40,10 +40,10 @@ def run(input_data: str):
 
     parts = []
     for max_straight, min_straight in [(3, 1), (10, 4)]:
-        state_tree = dijkstra(next_states, ((0, 0), None, 0))
+        state_tree = dijkstra(((0, 0), None, 0), next_states)
         end_states = [
             ((point, drt, cons), cost)
-            for (point, drt, cons), (_, cost, _) in state_tree.items()
+            for (point, drt, cons), (cost, _) in state_tree.items()
             if point == (lengths[0] - 1, lengths[1] - 1)
         ]
         costs = [state[1] for state in end_states]

@@ -1,4 +1,5 @@
 import heapq
+import math
 from typing import Callable, Hashable
 
 directions = [(0, 1), (-1, 0), (0, -1), (1, 0)]
@@ -29,75 +30,48 @@ def neighbors_2d(
 
 
 def dijkstra(
-    get_neighbors: Callable[[Hashable], list[tuple[Hashable, int]]],
     start: Hashable,
-    is_destination: None | Callable[[Hashable], bool] = None,
-    get_set_node: (
-        tuple[
-            Callable[[Hashable], tuple[Hashable, int, bool]],
-            Callable[[Hashable, tuple[Hashable, int, bool]], None],
-        ]
-        | None
-    ) = None,
-) -> dict[Hashable, tuple[Hashable, int, bool]] | None:
-    """A dynamic implementation of Dijkstra's algorithm, supporting infinite graphs (uniform cost search) and manages nodes using keys.
+    get_neighbors: Callable[[Hashable], list[tuple[Hashable, int]]],
+    is_goal: None | Callable[[Hashable], bool] = None,
+) -> dict[Hashable, tuple[Hashable, int]]:
+    """A dynamic implementation of Dijkstra's algorithm, supporting infinite graphs (uniform cost search),
+    and terminates when no more nodes are found or the is_goal condition is True.
 
-    Stores nodes in a dict by default. Each node is represented by a tuple: (
-        Key of the previous node in the minimum cost path: Hashable,
-        The current minimum cost: int,
-        Whether the node has been visited: bool
-    )
+    Nodes are stored as values in a dict, and each node is a tuple containing its:
+    - Minimum path cost
+    - Parent in the minimum cost tree
 
     Args:
-        get_neighbors: Function to find all neighbors of the node with the given key
         start: Key of the starting node
-        is_destination: Function to check if the algorithm should end at the current node
-        get_set_node: Tuple of functions to get and set node value from key
+        get_neighbors: Function to find all neighbor nodes of the node with the given key
+        is_goal: Function to check if the algorithm should end at the current node, defaults to None
 
     Returns:
-        Dict of keys to nodes if get_set_node is not specified, else None.
+        Dict of keys to nodes
     """
+    current_key = start
+    # [(cost, key)]:
+    frontier = [(int(), start)]
+    # {key: (cost, parent_key)} (include expanded and frontier):
+    min_path_tree: dict[Hashable, tuple[int, Hashable]] = {}
+    is_goal = is_goal or (lambda _: False)
 
-    if get_set_node:
-        get_node, set_node = get_set_node
-    else:
-        nodes_dict: dict[Hashable, tuple[Hashable, int, bool]] = {}
+    while frontier and not is_goal(current_key):
+        current_cost, current_key = heapq.heappop(frontier)
 
-        get_node, set_node = (
-            lambda key: nodes_dict.get(key, (None, float("inf"), False)),
-            lambda key, node: nodes_dict.update([(key, node)]),
-        )
-
-    current = start
-    set_node(start, (None, 0, False))
-    priority_queue = [(0, start)]
-
-    while not (is_destination and is_destination(current)) and priority_queue:
-        _, current = heapq.heappop(priority_queue)
-        prev, current_cost, visited = get_node(current)
-        if visited:
-            continue
-
-        for nei, cost in get_neighbors(current):
-            _, nei_cost, nei_visited = get_node(nei)
-
-            # A* would skip this check, but the heuristic has to be good enough:
-            if nei_visited:
-                continue
-
+        for nei_key, nei_cost in get_neighbors(current_key):
+            tree_cost, _ = min_path_tree.get(nei_key, (math.inf, None))
             # A* heuristic would be added here:
-            new_cost = current_cost + cost  # + h(nei)
-            if new_cost < nei_cost:
-                set_node(nei, (current, new_cost, False))
+            new_cost = current_cost + nei_cost  # + h(nei)
+
+            if new_cost < tree_cost:
+                min_path_tree[nei_key] = new_cost, current_key
                 heapq.heappush(
-                    priority_queue,
+                    frontier,
                     (
                         new_cost,
-                        nei,
+                        nei_key,
                     ),
                 )
 
-        set_node(current, (prev, current_cost, True))
-
-    if get_set_node is None:
-        return nodes_dict
+    return min_path_tree

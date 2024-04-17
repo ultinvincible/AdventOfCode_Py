@@ -1,3 +1,4 @@
+import csv
 import datetime
 import importlib.util
 import os
@@ -11,19 +12,23 @@ import requests
 from config import SESSION_TOKEN as session_token
 
 base_url = "https://adventofcode.com/"
+with open("answers", newline="") as file:
+    reader = csv.DictReader(file)
+    answers = {
+        (int(row["year"]), int(row["day"])): (row["part1"], row["part2"])
+        for row in reader
+    }
 
 
 def run_day(year: int, day: int, measure_time=True):
     if module := sys.modules.get(f"20{year}.{day:02}", None):
         importlib.reload(module)
-    else:
-        year_path = f"20{year}"
-        if os.path.exists(year_path):
-            listdir = os.listdir(year_path)
-            if files := [
-                filename for filename in listdir if filename[:2] == "{:02}".format(day)
-            ]:
-                module = importlib.import_module(f"{year_path}.{files[0][:-3]}")
+    elif os.path.exists(year_path := f"20{year}"):
+        listdir = os.listdir(year_path)
+        if files := [
+            filename for filename in listdir if filename[:2] == "{:02}".format(day)
+        ]:
+            module = importlib.import_module(f"{year_path}.{files[0][:-3]}")
     if not module:
         raise FileNotFoundError("File not found.")
     if not (run := getattr(module, "run", None)):
@@ -33,27 +38,42 @@ def run_day(year: int, day: int, measure_time=True):
         os.mkdir(input_path)
     input_path = os.path.join(input_path, f"{year}{day:02}.txt")
     if not os.path.isfile(input_path) or os.stat(input_path).st_size == 0:
+        # Minimize requests
+        # https://www.reddit.com/r/adventofcode/comments/3v64sb/
+        response = requests.get(
+            f"{base_url}20{year}/day/{day}/input",
+            cookies={"session": session_token},
+        )
+        response.raise_for_status()
         with open(input_path, "w") as file:
-            # Minimize requests
-            # https://www.reddit.com/r/adventofcode/comments/3v64sb/
-            response = requests.get(
-                f"{base_url}20{year}/day/{day}/input",
-                cookies={"session": session_token},
-            )
-            file.write(response.content.decode("utf-8"))
-    with open(input_path, "r") as file:
+            file.write(response.content.decode())
+    with open(input_path) as file:
         input_data = file.read()
 
-    if measure_time:
-        start = time.time()
+    start = time.time()
     result = run(input_data)
-    if measure_time:
-        end = time.time()
-    print(f"{result[0] or 'Not implemented.'}\n{result[1] or 'Not implemented.'}")
+    end = time.time()
+    for i in (0, 1):
+        if result[i]:
+            multiline = "\n" in (part := str(result[i]))
+            if i == 1 and multiline:
+                print()
+            print(part.ljust(20), end="| " if not multiline else "\n")
+            answer = answers.get((year, day), None)
+            print(
+                (
+                    "Correct"
+                    if part == answer[i]
+                    else f"Incorrect{': ' if not multiline else '\n'}{answer[i]}"
+                )
+                if answer and answer[i]
+                else "No answer"
+            )
+        else:
+            print("Not implemented.")
     if measure_time and any(result):
-        print(f"Runtime: {round(end-start, 3)} s.")
-    #     return result, end-start
-    # return result
+        print(f"Runtime: {round(end - start, 3)} s.")
+    return result
 
 
 def submit(year: int, day: int, result: tuple[str, str]):
@@ -65,20 +85,28 @@ def submit(year: int, day: int, result: tuple[str, str]):
 
     part = 2 if result[1] else 1
     data = {"level": part, "answer": result[part - 1]}
+    # Minimize requests
     response = requests.post(
         f"{base_url}20{year}/day/{day}/answer",
         data=data,
         cookies={"session": session_token},
         headers=headers,
     )
+    response.raise_for_status()
+
     main = re.split(
-        "<main>\n<article><p>|</p></article>\n</main>",
+        r"<main>\n<article><p>|</p></article>\n</main>",
         response.content.decode(),
     )[1]
-    html = re.split(f'<a href="/{year}/day/{day}| You can ', main)[0]
+    html = re.split(r"\[| You can ", main)[0]
     message = "".join(re.split("[<>]", html)[::2])
-    print(main)
-    print(message)
+    # print(main)
+    print(*message.split(), sep=" ")
+
+    if part == 2 and message.startswith("That's the right answer!"):
+        with open("answers", "a", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow([year, day, *result])
 
 
 if __name__ == "__main__":
@@ -90,20 +118,26 @@ if __name__ == "__main__":
 
     result = (None,)
     while True:
-        prompt = f"Run [year] day ({year} {day:02}|{day}|all)"
+        prompt = f"Run [year] day ({year} {day:02}| {day}| all)"
         if any(result):
             prompt += " or 's' to submit"
         options = input(prompt + ": ").split()
 
         if options == ["s"]:
-            submit(year, day, result)
-            result = (None,)
+            if any(result):
+                submit(year, day, result)
+                result = (None,)
+            else:
+                print("There is no result to submit.")
             continue
 
         if options == ["all"]:
             for d in range(1, 26):
                 print(f"---- Day {d:02} ----")
-                run_day(year, d)
+                try:
+                    run_day(year, d)
+                except Exception as e:
+                    print(type(e), e)
             continue
 
         try:
@@ -122,14 +156,12 @@ if __name__ == "__main__":
             os.mkdir(path)
         path = os.path.join(path, f"{day:02}.py")
         if not os.path.isfile(path) or os.stat(path).st_size == 0:
-            with open("template.py", "r") as file:
-                template = file.read()
-            with open(path, "w") as file:
-                file.write(template)
+            with open("template.py") as template, open(path, "w") as file:
+                file.write(template.read())
             print("File created.")
             continue
 
         try:
-            run_day(year, day)
+            result = run_day(year, day)
         except Exception:
             traceback.print_exc()
