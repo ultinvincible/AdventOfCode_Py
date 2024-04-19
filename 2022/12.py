@@ -1,4 +1,14 @@
-import helper
+from helper import neighbors_2d, bf_search
+
+
+def height(char: str):
+    match char:
+        case "S":
+            return ord("a")
+        case "E":
+            return ord("z")
+        case _:
+            return ord(char)
 
 
 def run(input_data: str):
@@ -6,53 +16,33 @@ def run(input_data: str):
 
     for row, line in enumerate(height_map):
         if (col := line.find("S")) != -1:
-            start_row, start_col = row, col
+            start = row, col
 
         if (col := line.find("E")) != -1:
-            end_row, end_col = row, col
+            end = row, col
 
-    return (
-        bf_search_steps(height_map, start_row, start_col),
-        bf_search_steps(height_map, end_row, end_col, True),
-    )
-
-
-def bf_search_steps(
-    height_map: list[str], start_row: int, start_col: int, reverse=False
-):
-    BFS_queue = [(start_row, start_col, 0)]
-    explored = [[False for _ in line] for line in height_map]
-    explored[start_row][start_col] = True
-
-    result = 0
-    while BFS_queue and not result:
-        row, col, steps = BFS_queue.pop(0)
-
-        square = (
-            height_map[row][col]
-            if (row, col) != (start_row, start_col)
-            else ("a" if not reverse else "z")
-        )
-        neis = helper.neighbors_2d(
-            (row, col), (len(height_map), len(height_map[0]))
-        ).values()
-
-        for nei_row, nei_col in neis:
-            nei = height_map[nei_row][nei_col]
+    def get_neighbors(square: tuple[int, int], reverse=False):
+        neis_2d = neighbors_2d(square, (len(height_map), len(height_map[0])))
+        for drt, nei in neis_2d.copy().items():
+            square_char, nei_char = tuple(
+                height_map[point[0]][point[1]] for point in (square, nei)
+            )
             if (
-                ord(nei) > ord(square) + 1
+                height(nei_char) > height(square_char) + 1
                 if not reverse
-                else ord(nei) < ord(square) - 1
+                else height(square_char) > height(nei_char) + 1
             ):
-                continue
+                neis_2d.pop(drt)
+        return list(neis_2d.values())
 
-            if nei == ("E" if not reverse else "a"):
-                result = steps + 1
-                break
-
-            if not explored[nei_row][nei_col]:
-                explored[nei_row][nei_col] = True
-                BFS_queue.append((nei_row, nei_col, steps + 1))
-
-    # print("\n".join("".join("#" if e else "." for e in line) for line in explored))
-    return result
+    part1, _ = bf_search(
+        start,
+        get_neighbors,
+        lambda point: height_map[point[0]][point[1]] == "E",
+    )
+    part2, _ = bf_search(
+        end,
+        lambda point: get_neighbors(point, True),
+        lambda point: height_map[point[0]][point[1]] == "a",
+    )
+    return part1, part2

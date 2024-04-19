@@ -6,6 +6,7 @@ import re
 import sys
 import time
 import traceback
+from typing import Callable
 
 import requests
 
@@ -31,7 +32,9 @@ def run_day(year: int, day: int, measure_time=True):
             module = importlib.import_module(f"{year_path}.{files[0][:-3]}")
     if not module:
         raise FileNotFoundError("File not found.")
-    if not (run := getattr(module, "run", None)):
+    try:
+        run: Callable[[str], tuple[str, str]] = getattr(module, "run", None)
+    except AttributeError:
         raise AttributeError("Module does not have a 'run' method.")
 
     if not os.path.exists(input_path := "Inputs"):
@@ -53,13 +56,13 @@ def run_day(year: int, day: int, measure_time=True):
     start = time.time()
     result = run(input_data)
     end = time.time()
+    answer = answers.get((year, day), None)
     for i in (0, 1):
         if result[i]:
             multiline = "\n" in (part := str(result[i]))
             if i == 1 and multiline:
                 print()
             print(part.ljust(20), end="| " if not multiline else "\n")
-            answer = answers.get((year, day), None)
             print(
                 (
                     "Correct"
@@ -103,10 +106,14 @@ def submit(year: int, day: int, result: tuple[str, str]):
     # print(main)
     print(*message.split(), sep=" ")
 
-    if part == 2 and message.startswith("That's the right answer!"):
+    if part == 2 and re.split("[!.]", message, 1)[0] in (
+        "That's the right answer",
+        "You don't seem to be solving the right level",
+    ):
         with open("answers", "a", newline="") as file:
             writer = csv.writer(file)
             writer.writerow([year, day, *result])
+            answers[year, day] = str(result[0]), str(result[1])
 
 
 if __name__ == "__main__":
@@ -118,20 +125,20 @@ if __name__ == "__main__":
 
     result = (None,)
     while True:
-        prompt = f"Run [year] day ({year} {day:02}| {day}| all)"
+        prompt = f"Run [year]{{day}} ({year}{day:02}| {day:>2}| all)"
         if any(result):
             prompt += " or 's' to submit"
-        options = input(prompt + ": ").split()
+        command = input(prompt + ": ")
 
-        if options == ["s"]:
-            if any(result):
+        if command == "s":
+            if any(result) and not answers[year, day]:
                 submit(year, day, result)
                 result = (None,)
             else:
                 print("There is no result to submit.")
             continue
 
-        if options == ["all"]:
+        if command == "all":
             for d in range(1, 26):
                 print(f"---- Day {d:02} ----")
                 try:
@@ -141,12 +148,11 @@ if __name__ == "__main__":
             continue
 
         try:
-            assert 1 <= (day := int(options[-1])) <= 25
-            if (
-                len(options) > 1
-                and 15 <= (option_year := int(options[0])) <= today.year - 2000
-            ):
-                year = option_year
+            assert 1 <= (input_day := int(command[-2:])) <= 25
+            if len(command) > 2:
+                assert 15 <= (input_year := int(command[:-2])) <= today.year - 2000
+                year = input_year
+            day = input_day
         except (IndexError, ValueError, AssertionError):
             print("Invalid options provided. Exiting.")
             break
