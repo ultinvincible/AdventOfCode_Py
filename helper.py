@@ -3,13 +3,17 @@ import math
 from queue import SimpleQueue
 from typing import Callable, Hashable
 
-directions = [(0, 1), (-1, 0), (0, -1), (1, 0)]
-diagonals = [(1, 1), (1, -1), (-1, 1), (-1, -1)]
+__directions = [(0, 1), (-1, 0), (0, -1), (1, 0)]
+__diagonals = [(1, 1), (1, -1), (-1, 1), (-1, -1)]
+
+
+def directions_2d(diagonal=False):
+    return list(__directions if not diagonal else __directions + __diagonals)
 
 
 def neighbors_2d(
     point: tuple[int, int], bounds: tuple[int, int], diagonal=False
-) -> dict[tuple[int, int], tuple[int, int]]:
+) -> list[tuple[int, int]]:
     """On a 2D square grid/table/matrix, generates neighbors for a point.
 
     Args:
@@ -21,12 +25,12 @@ def neighbors_2d(
         dict[tuple[int, int], tuple[int, int]]: Mapping of directions to neighbors.
     """
     row, col = point
-    neis = {}
-    for r, c in directions if not diagonal else directions + diagonals:
+    neis = []
+    for r, c in directions_2d(diagonal):
         nei = row + r, col + c
         # Reminder that try except IndexError doesnt work because negative indices are allowed.
         if all(0 <= nei[i] < bounds[i] for i in (0, 1)):
-            neis[r, c] = nei
+            neis.append(nei)
     return neis
 
 

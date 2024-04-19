@@ -1,5 +1,4 @@
-from helper import directions
-from bisect import bisect
+from helper import directions_2d
 
 symbols = "RULD"
 
@@ -7,12 +6,12 @@ symbols = "RULD"
 def run(input_data: str):
     part1 = 0
     part2 = 0
-    dig_plan = []
-    dig_plan2 = []
+    dig_plan, dig_plan2 = [], []
+    drts_2d = directions_2d()
     for line in input_data.splitlines():
         drt, dist, color = tuple(line.split())
-        dig_plan.append((directions[symbols.index(drt)], int(dist)))
-        dig_plan2.append((directions[(4 - int(color[7])) % 4], int(color[2:7], 16)))
+        dig_plan.append((drts_2d[symbols.index(drt)], int(dist)))
+        dig_plan2.append((drts_2d[(4 - int(color[7])) % 4], int(color[2:7], 16)))
 
     rows = {0: []}
     current = [0, 0]
@@ -93,7 +92,8 @@ def run(input_data: str):
         move = 0 if drt[0] != 0 else 1
         line = [current[move]] * 2
         line.append(
-            dig_plan2[i - 1][0] == dig_plan2[(i + 1) if i != len(dig_plan2) - 1 else 0][0]
+            dig_plan2[i - 1][0]
+            == dig_plan2[(i + 1) if i != len(dig_plan2) - 1 else 0][0]
         )
         new_i = (drt[move] + 1) // 2
         line[new_i] += drt[move] * dist
@@ -161,5 +161,5 @@ def run(input_data: str):
     # with open("output.py", "w") as file:
     #     for row in dig_map:
     #         file.write(''.join(row))
-    
+
     return part1, part2

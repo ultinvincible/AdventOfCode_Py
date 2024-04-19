@@ -1,5 +1,5 @@
 from functools import cache
-from helper import directions
+from helper import directions_2d
 
 
 def behavior(drt, tile):
@@ -24,7 +24,7 @@ def run(input_data: str):
     light_map = [list(s) for s in input_data.splitlines()]
     lengths = (len(light_map), len(light_map[0]))
     starts = []
-    for drt in directions:
+    for drt in directions_2d():
         dim = 0 if drt[0] == 0 else 1
         for i in range(lengths[dim]):
             start = [0, 0]

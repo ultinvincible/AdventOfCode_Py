@@ -23,7 +23,7 @@ def run(input_data: str):
 
     def get_neighbors(square: tuple[int, int], reverse=False):
         neis_2d = neighbors_2d(square, (len(height_map), len(height_map[0])))
-        for drt, nei in neis_2d.copy().items():
+        for nei in neis_2d.copy():
             square_char, nei_char = tuple(
                 height_map[point[0]][point[1]] for point in (square, nei)
             )
@@ -32,8 +32,8 @@ def run(input_data: str):
                 if not reverse
                 else height(square_char) > height(nei_char) + 1
             ):
-                neis_2d.pop(drt)
-        return list(neis_2d.values())
+                neis_2d.remove(nei)
+        return list(neis_2d)
 
     part1, _ = bf_search(
         start,
