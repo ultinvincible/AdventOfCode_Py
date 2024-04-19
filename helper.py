@@ -1,13 +1,13 @@
 import heapq
 import math
 from queue import SimpleQueue
-from typing import Callable, Hashable
+from typing import Callable
 
 __directions = [(0, 1), (-1, 0), (0, -1), (1, 0)]
 __diagonals = [(1, 1), (1, -1), (-1, 1), (-1, -1)]
 
 
-def directions_2d(diagonal=False):
+def directions_2d(diagonal=False) -> list[tuple[int, int]]:
     return list(__directions if not diagonal else __directions + __diagonals)
 
 
@@ -34,29 +34,35 @@ def neighbors_2d(
     return neis
 
 
+class Key(tuple):
+    pass
+
+
 def bf_search(
-    start: Hashable,
-    get_neighbors: Callable[[Hashable], list[Hashable]],
-    is_goal: Callable[[Hashable], bool] | None = None,
-) -> tuple[dict[Hashable, tuple[int, Hashable]], int]:
-    """Best first search, supporting infinite graphs, and stores nodes as values in a dict.
-    Each node is mapped to its path length and parent in the path tree.
+    start: Key,
+    get_neighbors: Callable[[Key], list[Key]],
+    is_goal: Callable[[Key], bool] | None = None,
+) -> tuple[int, dict[Key, tuple[int, Key]]]:
+    """Best first search, supporting infinite graphs, and stores nodes in a dict.
+    Each key is a node, mapped to its path length and parent in the path tree.
 
     Args:
         get_neighbors: Function to find neighbor nodes
         start: The starting node
-        is_goal: Function to check if the algorithm should end at the current node, defaults to None
+        is_goal: Function to check if the algorithm should end at the current node,
+        defaults to None
 
     Returns:
-        Dict of nodes to path length and parent nodes/ Path tree, and the path length to reach the last node
+        Dict of nodes to path length and parent nodes/ Path tree,
+        and the path length to reach the last node
     """
     # [(path_length, node)]:
-    queue: SimpleQueue[tuple[int, Hashable]] = SimpleQueue()
-    explored: set[Hashable] = {start}
+    queue: SimpleQueue[tuple[int, Key]] = SimpleQueue()
+    explored: set[Key] = {start}
     queue.put((0, start))
 
     # {node: (path_length, parent_node)}:
-    path_tree: dict[Hashable, tuple[int, Hashable]] = {start: (0, None)}
+    path_tree: dict[Key, tuple[int, Key]] = {start: (0, None)}
     is_goal = is_goal or (lambda _: False)
 
     while not queue.empty():
@@ -74,10 +80,10 @@ def bf_search(
 
 
 def dijkstra(
-    start: Hashable,
-    get_neighbors: Callable[[Hashable], list[tuple[int, Hashable]]],
-    is_goal: Callable[[Hashable], bool] | None = None,
-) -> tuple[dict[Hashable, tuple[int, Hashable]], int]:
+    start: Key,
+    get_neighbors: Callable[[Key], list[tuple[int, Key]]],
+    is_goal: Callable[[Key], bool] | None = None,
+) -> tuple[int, dict[Key, tuple[int, Key]]]:
     """A dynamic implementation of Dijkstra's algorithm, supporting infinite graphs (uniform cost search),
     and terminates when no more nodes are found or the is_goal condition is True.
 
@@ -96,7 +102,7 @@ def dijkstra(
     # [(cost, key)]:
     frontier = [(int(), start)]
     # {key: (cost, parent_key)} (include expanded and frontier):
-    min_path_tree: dict[Hashable, tuple[int, Hashable]] = {start: (0, None)}
+    min_path_tree: dict[Key, tuple[int, Key]] = {start: (0, None)}
 
     is_goal = is_goal or (lambda _: False)
 

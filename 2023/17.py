@@ -5,7 +5,11 @@ def run(input_data: str):
     city_map = [[int(char) for char in list(line)] for line in input_data.splitlines()]
     lengths = [len(city_map), len(city_map[0])]
 
-    def next_states(state, max_straight: int, min_straight: int):
+    def next_states(
+        state: tuple[tuple[int, int], tuple[int, int]],
+        max_straight: int,
+        min_straight: int,
+    ):
         (row, col), from_drt = state
         drts_2d = directions_2d()
         if from_drt:
@@ -14,7 +18,7 @@ def run(input_data: str):
                     drts_2d.remove(drt)
                 except ValueError:
                     pass
-        result = []
+        result: list[tuple[int, tuple[tuple[int, int], tuple[int, int]]]] = []
         for drt_nei in drts_2d:
             i = 0 if drt_nei[0] != 0 else 1
             cost = 0
