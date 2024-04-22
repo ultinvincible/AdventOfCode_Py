@@ -34,11 +34,9 @@ def neighbors_2d(
     return neis
 
 
-class Key(tuple):
-    pass
-
-
-def bf_search(
+def bf_search[
+    Key
+](
     start: Key,
     get_neighbors: Callable[[Key], list[Key]],
     is_goal: Callable[[Key], bool] | None = None,
@@ -53,8 +51,8 @@ def bf_search(
         defaults to None
 
     Returns:
-        Dict of nodes to path length and parent nodes/ Path tree,
-        and the path length to reach the last node
+        The path length to reach a goal node and
+        the dict of nodes to path length and parent nodes/ path tree
     """
     # [(path_length, node)]:
     queue: SimpleQueue[tuple[int, Key]] = SimpleQueue()
@@ -64,10 +62,12 @@ def bf_search(
     # {node: (path_length, parent_node)}:
     path_tree: dict[Key, tuple[int, Key]] = {start: (0, None)}
     is_goal = is_goal or (lambda _: False)
+    goal_cost = None
 
     while not queue.empty():
         path_length, current_node = queue.get()
         if is_goal(current_node):
+            goal_cost = path_length
             break
 
         for nei in get_neighbors(current_node):
@@ -76,10 +76,12 @@ def bf_search(
                 path_tree[nei] = path_length + 1, current_node
                 queue.put((path_length + 1, nei))
 
-    return path_length, path_tree
+    return goal_cost, path_tree
 
 
-def dijkstra(
+def dijkstra[
+    Key
+](
     start: Key,
     get_neighbors: Callable[[Key], list[tuple[int, Key]]],
     is_goal: Callable[[Key], bool] | None = None,
@@ -97,7 +99,7 @@ def dijkstra(
         is_goal: Function to check if the algorithm should end at the current node, defaults to None
 
     Returns:
-        Dict of keys to nodes/ Minimum path tree, and the minimum cost to reach the last node
+        The minimum cost to reach a goal node and dict of keys to nodes/ minimum path tree
     """
     # [(cost, key)]:
     frontier = [(int(), start)]
@@ -105,10 +107,12 @@ def dijkstra(
     min_path_tree: dict[Key, tuple[int, Key]] = {start: (0, None)}
 
     is_goal = is_goal or (lambda _: False)
+    goal_cost = None
 
     while frontier:
         current_cost, current_key = heapq.heappop(frontier)
         if is_goal(current_key):
+            goal_cost = current_cost
             break
 
         for nei_cost, nei_key in get_neighbors(current_key):
@@ -126,4 +130,4 @@ def dijkstra(
                     ),
                 )
 
-    return current_cost, min_path_tree
+    return goal_cost, min_path_tree

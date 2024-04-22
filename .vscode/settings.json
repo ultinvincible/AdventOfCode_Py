@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "answers": "csv"
+        "answers": "csv",
+        "output": "plaintext"
     }
 }

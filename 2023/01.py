@@ -2,7 +2,7 @@ def run(input_data: str):
     part1 = 0
     part2 = 0
     for line in input_data.splitlines():
-        value = ''
+        value = ""
         for char in line:
             if char.isdecimal():
                 value += char
@@ -14,10 +14,12 @@ def run(input_data: str):
         part1 += int(value)
 
     digits = [str(i) for i in range(10)]
-    digits.extend(["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"])
+    digits.extend(
+        ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+    )
     for line in input_data.splitlines():
-        left = '', len(line)
-        right = '', -1
+        left = "", len(line)
+        right = "", -1
         for d in digits:
             index = line.find(d)
             if index != -1 and index < left[1]:

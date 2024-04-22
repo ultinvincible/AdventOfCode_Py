@@ -13,15 +13,16 @@ import requests
 from config import SESSION_TOKEN as session_token
 
 base_url = "https://adventofcode.com/"
+
+answers: dict[tuple[int, int, int], str] = {}
 with open("answers", newline="") as file:
-    reader = csv.DictReader(file)
-    answers = {
-        (int(row["year"]), int(row["day"])): (row["part1"], row["part2"])
-        for row in reader
-    }
+    reader = csv.reader(file)
+    for row in reader:
+        answer = row.pop()
+        answers[tuple(map(int, row))] = answer
 
 
-def run_day(year: int, day: int, measure_time=True):
+def run_day(year: int, day: int):
     if module := sys.modules.get(f"20{year}.{day:02}", None):
         importlib.reload(module)
     elif os.path.exists(year_path := f"20{year}"):
@@ -31,11 +32,11 @@ def run_day(year: int, day: int, measure_time=True):
         ]:
             module = importlib.import_module(f"{year_path}.{files[0][:-3]}")
     if not module:
-        raise FileNotFoundError("File not found.")
+        raise Exception("File not found.")
     try:
-        run: Callable[[str], tuple[str, str]] = getattr(module, "run", None)
+        run: Callable[[str], tuple[int, int | str]] = getattr(module, "run", None)
     except AttributeError:
-        raise AttributeError("Module does not have a 'run' method.")
+        raise Exception("Module does not have a 'run' method.")
 
     if not os.path.exists(input_path := "Inputs"):
         os.mkdir(input_path)
@@ -56,30 +57,31 @@ def run_day(year: int, day: int, measure_time=True):
     start = time.time()
     result = run(input_data)
     end = time.time()
-    answer = answers.get((year, day), None)
-    for i in (0, 1):
-        if result[i]:
-            multiline = "\n" in (part := str(result[i]))
-            if i == 1 and multiline:
+    for part in (0, 1):
+        if result[part]:
+            result_part = str(result[part])
+            multiline = "\n" in result_part
+            answer = answers.get((year, day, part + 1), None)
+            if part == 1 and multiline:
                 print()
-            print(part.ljust(20), end="| " if not multiline else "\n")
+            print(result_part.ljust(20), end="| " if not multiline else "\n")
             print(
                 (
                     "Correct"
-                    if part == answer[i]
-                    else f"Incorrect{': ' if not multiline else '\n'}{answer[i]}"
+                    if result_part == answer
+                    else f"Incorrect{': ' if not multiline else '\n'}{answer}"
                 )
-                if answer and answer[i]
+                if answer
                 else "No answer"
             )
         else:
-            print("Not implemented.")
-    if measure_time and any(result):
+            print("No result")
+    if any(result):
         print(f"Runtime: {round(end - start, 3)} s.")
     return result
 
 
-def submit(year: int, day: int, result: tuple[str, str]):
+def submit(year: int, day: int, result: tuple[int, int | str]):
     # Requested by the AoC creator at:
     # https://www.reddit.com/r/adventofcode/comments/z9dhtd/
     headers = {
@@ -106,14 +108,16 @@ def submit(year: int, day: int, result: tuple[str, str]):
     # print(main)
     print(*message.split(), sep=" ")
 
-    if part == 2 and re.split("[!.]", message, 1)[0] in (
+    if re.split("[!.]", message, 1)[0] in (
         "That's the right answer",
         "You don't seem to be solving the right level",
     ):
         with open("answers", "a", newline="") as file:
             writer = csv.writer(file)
-            writer.writerow([year, day, *result])
-            answers[year, day] = str(result[0]), str(result[1])
+            for p, result_part in enumerate(result):
+                if result_part:
+                    writer.writerow([year, day, p, result_part])
+                    answers[year, day, p] = result_part
 
 
 if __name__ == "__main__":
@@ -131,7 +135,7 @@ if __name__ == "__main__":
         command = input(prompt + ": ")
 
         if command == "s":
-            if any(result) and not answers[year, day]:
+            if any(result):
                 submit(year, day, result)
                 result = (None,)
             else:
