@@ -22,6 +22,10 @@ with open("answers", newline="") as file:
         answers[tuple(map(int, row))] = answer
 
 
+class AoCError(Exception):
+    pass
+
+
 def run_day(year: int, day: int):
     if module := sys.modules.get(f"20{year}.{day:02}", None):
         importlib.reload(module)
@@ -32,11 +36,11 @@ def run_day(year: int, day: int):
         ]:
             module = importlib.import_module(f"{year_path}.{files[0][:-3]}")
     if not module:
-        raise Exception("File not found.")
+        raise AoCError("File not found.")
     try:
         run: Callable[[str], tuple[int, int | str]] = getattr(module, "run", None)
     except AttributeError:
-        raise Exception("Module does not have a 'run' method.")
+        raise AoCError("Module does not have a 'run' method.")
 
     if not os.path.exists(input_path := "Inputs"):
         os.mkdir(input_path)
@@ -116,8 +120,8 @@ def submit(year: int, day: int, result: tuple[int, int | str]):
             writer = csv.writer(file)
             for p, result_part in enumerate(result):
                 if result_part:
-                    writer.writerow([year, day, p, result_part])
-                    answers[year, day, p] = result_part
+                    writer.writerow([year, day, p + 1, result_part])
+                    answers[year, day, p + 1] = result_part
 
 
 if __name__ == "__main__":
@@ -173,5 +177,5 @@ if __name__ == "__main__":
 
         try:
             result = run_day(year, day)
-        except Exception:
+        except AoCError:
             traceback.print_exc()
