@@ -1,84 +1,80 @@
-import bisect
-from collections import Counter
+from functools import cache
+
+
+@cache
+def move_line(line: str):
+    new_line: list[str] = list(line)
+    dest_i = 0
+    for line_i, char in enumerate(line):
+        match char:
+            case "#":
+                dest_i = line_i + 1
+            case "O":
+                if line_i != dest_i:
+                    new_line[dest_i] = "O"
+                    new_line[line_i] = "."
+                dest_i += 1
+    return "".join(new_line)
 
 
 def run(input_data: str):
-    # for col in zip(*rock_map):
-    #     rounds_cube = [[0, 0]]
-    #     for r, rock in enumerate(col):
-    #         match rock:
-    #             case "O":
-    #                 rounds_cube[-1][0] += 1
-    #             case "#":
-    #                 rounds_cube.append([0, r + 1])
-    #     weight = 0
-    #     for rc in rounds_cube:
-    #         rounds, cube = tuple(rc)
-    #         weight += int((lengths[0] - cube - (rounds - 1) / 2) * rounds)
-    #     part1 += weight
+    part1, part2 = 0, 0
+    rock_map = [list(line) for line in input_data.splitlines()]
+    for col in zip(*rock_map):
+        stacks = [[0, 0]]
+        for row, rock in enumerate(col):
+            match rock:
+                case "O":
+                    stacks[-1][0] += 1
+                case "#":
+                    stacks.append([0, row + 1])
+        load = sum(
+            (len(rock_map) - row) * count - (count - 1) * count // 2
+            for count, row in stacks
+        )
+        part1 += load
 
-    part1 = 0
-    part2 = 0
-    rock_map = input_data.splitlines()
-    lengths = [len(rock_map), len(rock_map[0])]
-    rounds_histories = [[]]
-    cubes = [[[] for _ in rock_map], [[] for _ in rock_map[0]]]
-    for row, line in enumerate(rock_map):
-        for col, rock in enumerate(line):
-            if rock == "O":
-                rounds_histories[0].append((row, col))
-            elif rock == "#":
-                cubes[0][row].append(col)
-                cubes[1][col].append(row)
-    directions = [(1, -1), (0, -1), (1, 1), (0, 1)]
+    rock_map = list(zip(*rock_map))
+    map_history = {to_tuple(rock_map): 0}
+    output = ["\n".join(to_tuple(rock_map))]
+    for cycle in range(10**9):
+        output.append("Cycle " + str(cycle))
+        for _ in range(4):
+            rock_map = [move_line(line) for line in rock_map]
+            # rotate counter-clockwise
+            rock_map = list(zip(*(line[::-1] for line in rock_map)))
+            if len(rock_map) <= 10:
+                output.append("\n".join(to_tuple(rock_map)) + "\n")
 
-    r = 0
-    # repeat = [(0, 0) for _ in rounds_histories[0]]
-    for _ in range(1000000000):
-        rounds_prev = list(rounds_histories[-1])
-        for drt in directions:
-            rounds_current = []
-            for round_rock in rounds_prev:
-                new_rock = list(round_rock)
-                line = cubes[drt[0]][new_rock[drt[0]]]
-                i = bisect.bisect_left(line, new_rock[1 - drt[0]]) + (
-                    0 if drt[1] == 1 else -1
-                )
-                if i in (-1, len(line)):
-                    move = -1 if i == -1 else lengths[1 - drt[0]]
-                else:
-                    move = line[i]
-                new_rock[1 - drt[0]] = move - drt[1]
-                while tuple(new_rock) in rounds_current:
-                    new_rock[1 - drt[0]] -= drt[1]
-                rounds_current.append(tuple(new_rock))
-            if len(rounds_histories) == 1 and drt == (1, -1):
-                part1 = sum(lengths[0] - round[0] for round in rounds_current)
-            rounds_prev = rounds_current
-
-        # print(rounds_current)
-        # for row, line in enumerate(rock_map):
-        #     line = list(line)
-        #     for col, rock in enumerate(line):
-        #         char = rock
-        #         if (row, col) in rounds_current:
-        #             char = "O"
-        #         elif char == "O":
-        #             char = "."
-        #         print(char, end="")
-        #     print()
-        # print()
-
-        matches = [(r, h) for (r, h) in enumerate(rounds_histories) if Counter(h) == Counter(rounds_current)]
-        if len(matches)==1:
-            r=matches[0][0]
-            (start, step) = (r, len(rounds_histories) - r)
+        map_str = to_tuple(rock_map)
+        load = map_load(list(zip(*rock_map)))
+        output.append(load)
+        if repeated_cycle := map_history.get(map_str, None):
+            dest_cycle = repeated_cycle + (10**9 - cycle - 1) % (
+                cycle + 1 - repeated_cycle
+            )
+            dest_map = [
+                _map for _map, cycle in map_history.items() if cycle == dest_cycle
+            ][0]
+            dest_map = list(zip(*dest_map))
+            output.append((cycle, repeated_cycle, dest_cycle))
             break
-        rounds_histories.append(list(rounds_current))
+        map_history[map_str] = cycle + 1
 
-    cycle = 1000000000 % step
-    if cycle < start:
-        cycle += step
-    part2 = sum(lengths[0] - round[0] for round in rounds_histories[cycle])
-
+    part2 = map_load(dest_map)
+    with open("output", "w") as file:
+        [print(line, file=file) for line in output]
     return part1, part2
+
+
+def map_load(rock_map):
+    return sum(
+        len(rock_map) - row
+        for row, line in enumerate(rock_map)
+        for rock in line
+        if rock == "O"
+    )
+
+
+def to_tuple(rock_map: tuple[str]):
+    return tuple("".join(line) for line in rock_map)
