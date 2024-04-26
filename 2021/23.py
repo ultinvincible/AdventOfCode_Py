@@ -138,7 +138,7 @@ def run(input_data: str):
     #         for burrow_map, (cost, parent_map) in map_tree.items():
     #             output.append(Draw(burrow_map, room_depth) + " " + "<" * 7)
     #             output.append(Draw(parent_map, room_depth) + " " + f"{cost:>5} ^")
-    # with open("output", "w") as file:
+    # with open("output.txt", "w") as file:
     #     [print(line, file=file) for line in output]
 
     return tuple(result)

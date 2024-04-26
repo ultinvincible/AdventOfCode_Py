@@ -108,6 +108,6 @@ def run(input_data: str):
     #                 f"{len(arrangements)}|{sum(combinations[0])}",
     #             ]
     #         )
-    # with open("output", "w") as file:
+    # with open("output.txt", "w") as file:
     #     [print(line, file=file) for line in output]
     return part1, part2

@@ -62,7 +62,7 @@ def run(input_data: str):
         map_history[map_str] = cycle + 1
 
     part2 = map_load(dest_map)
-    with open("output", "w") as file:
+    with open("output.txt", "w") as file:
         [print(line, file=file) for line in output]
     return part1, part2
 
