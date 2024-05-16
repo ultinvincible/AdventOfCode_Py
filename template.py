@@ -6,8 +6,8 @@ def run(input_data: str):
         split = line.split(...)
         ...
 
-    input_map = [list(line) for line in input_data.splitlines()]
-    for row, line in enumerate(input_map):
+    input_grid = [list(line) for line in input_data.splitlines()]
+    for row, line in enumerate(input_grid):
         for col, point in enumerate(line):
             ...
 

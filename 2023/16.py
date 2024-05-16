@@ -59,7 +59,7 @@ def run(input_data: str):
             for new_drt in new_drt_list:
                 if ((new_row, new_col), new_drt) not in beams:
                     beams.append(((new_row, new_col), new_drt))
-            # Reminder that set.update/|= is O(1) and set.union/| is O(n)
+            # Reminder that set.update/|= is Θ(1) and set.union/| is Θ(n)
             energized |= new_energized
             current_i += 1
 

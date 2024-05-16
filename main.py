@@ -102,6 +102,9 @@ def submit(year: int, day: int, result: tuple[int, int | str]):
         headers=headers,
     )
     response.raise_for_status()
+    if not response.url.endswith("answer"):
+        print("Invalid session token.")
+        return
 
     main = re.split(
         r"<main>\n<article><p>|</p></article>\n</main>",
@@ -121,7 +124,7 @@ def submit(year: int, day: int, result: tuple[int, int | str]):
             for p, result_part in enumerate(result):
                 if result_part:
                     writer.writerow([year, day, p + 1, result_part])
-                    answers[year, day, p + 1] = result_part
+                    answers[year, day, p + 1] = str(result_part)
 
 
 if __name__ == "__main__":
