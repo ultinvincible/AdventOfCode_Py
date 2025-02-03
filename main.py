@@ -8,14 +8,17 @@ import time
 import traceback
 from typing import Callable
 
+import browser_cookie3
 import requests
-
-from config import SESSION_TOKEN as session_token
 
 base_url = "https://adventofcode.com/"
 
+cookie_jar = browser_cookie3.firefox(
+    domain_name="adventofcode.com",
+)
+
 answers: dict[tuple[int, int, int], str] = {}
-with open("answers", newline="") as file:
+with open("answers.csv", newline="") as file:
     reader = csv.reader(file)
     for row in reader:
         answer = row.pop()
@@ -52,7 +55,7 @@ def run_day(year: int, day: int):
         # https://www.reddit.com/r/adventofcode/comments/3v64sb/
         response = requests.get(
             f"{base_url}20{year}/day/{day}/input",
-            cookies={"session": session_token},
+            cookies=cookie_jar,
         )
         response.raise_for_status()
         with open(input_path, "w") as file:
@@ -100,7 +103,7 @@ def submit(year: int, day: int, result: tuple[int, int | str]):
     response = requests.post(
         f"{base_url}20{year}/day/{day}/answer",
         data=data,
-        cookies={"session": session_token},
+        cookies=cookie_jar,
         headers=headers,
     )
     response.raise_for_status()
@@ -117,11 +120,8 @@ def submit(year: int, day: int, result: tuple[int, int | str]):
     # print(main)
     print(*message.split(), sep=" ")
 
-    if re.split("[!.]", message, 1)[0] in (
-        "That's the right answer",
-        "You don't seem to be solving the right level",
-    ):
-        with open("answers", "a", newline="") as file:
+    if "That's the right answer" in re.split("[!.]", message, 1)[0]:
+        with open("answers.csv", "a", newline="") as file:
             writer = csv.writer(file)
             for p, result_part in enumerate(result):
                 if result_part:
