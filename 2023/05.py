@@ -1,19 +1,27 @@
 import copy
+import math
 
 
 def run(input_data: str):
-    segments = input_data.split('\n\n')
+    segments = input_data.split("\n\n")
     seeds = [int(seed) for seed in segments.pop(0)[7:].split()]
-    almanac = [[[int(num) for num in line.split()] for line in seg.splitlines()[1:]] for seg in segments]
+    almanac = [
+        [[int(num) for num in line.split()] for line in seg.splitlines()[1:]]
+        for seg in segments
+    ]
     for c, conv in enumerate(almanac):
-        min_value = float('inf')
-        max_value = float('-inf')
+        min_value = math.inf
+        max_value = -math.inf
         for r, conv_range in enumerate(conv):
-            almanac[c][r] = [conv_range[1], conv_range[1] + conv_range[2] - 1, conv_range[0] - conv_range[1]]
+            almanac[c][r] = [
+                conv_range[1],
+                conv_range[1] + conv_range[2] - 1,
+                conv_range[0] - conv_range[1],
+            ]
             min_value = min((min_value, almanac[c][r][0]))
             max_value = max((max_value, almanac[c][r][1]))
-        almanac[c].append([float('-inf'), min_value - 1, 0])
-        almanac[c].append([max_value + 1, float('inf'), 0])
+        almanac[c].append([-math.inf, min_value - 1, 0])
+        almanac[c].append([max_value + 1, math.inf, 0])
     # source min, source max, conversion
     locations = copy.deepcopy(seeds)
     for conversion in almanac:

@@ -17,7 +17,9 @@ def moves(burrow_map: tuple[int, tuple[int, ...]], room_depth=2):
     # check unblocked
     for col_i, source_col in enumerate(burrow_map):
         if not IsRoom[col_i] and (source_col != 0 or col_i == 10):
-            check_into_room = [room for room in reachable_rooms if burrow_map[room]]
+            check_into_room = [
+                room for room in reachable_rooms if burrow_map[room]
+            ]
             if prev_hw_amp_i != -1:
                 check_into_room.append(prev_hw_amp_i)
             if source_col != 0:
@@ -27,7 +29,7 @@ def moves(burrow_map: tuple[int, tuple[int, ...]], room_depth=2):
 
             for source_i in check_into_room:
                 source_type = burrow_map[source_i]
-                if not type(source_type) is int:
+                if type(source_type) is not int:
                     source_type = source_type[-1]
                 dest_room = CorrectRoom[source_type]
                 if (
@@ -44,20 +46,25 @@ def moves(burrow_map: tuple[int, tuple[int, ...]], room_depth=2):
                 (room_i, hallway_i)
                 for room_i in reachable_rooms
                 for hallway_i in reachable_hwcs
-                if any(amphipod != room_i // 2 for amphipod in burrow_map[room_i])
+                if any(
+                    amphipod != room_i // 2 for amphipod in burrow_map[room_i]
+                )
             )
 
             reachable_hwcs.clear()
             reachable_rooms.clear()
             prev_hw_amp_i = col_i
         else:
-            (reachable_rooms if IsRoom[col_i] else reachable_hwcs).append(col_i)
+            (reachable_rooms if IsRoom[col_i] else reachable_hwcs).append(
+                col_i
+            )
 
     result: list[tuple[int, tuple[int, tuple[int, ...]]]] = []
     for move_list in room_moves, hallway_moves:
         for source_i, dest_i in move_list:
             if not burrow_map[source_i] or (
-                burrow_map[dest_i] != 0 and len(burrow_map[dest_i]) == room_depth
+                burrow_map[dest_i] != 0
+                and len(burrow_map[dest_i]) == room_depth
             ):
                 continue
 
@@ -110,13 +117,18 @@ def run(input_data: str):
                 0
                 if not IsRoom[col - 1]
                 else tuple(
-                    ord(line[col]) - ord("A") + 1 for line in input_lines[-2:1:-1]
+                    ord(line[col]) - ord("A") + 1
+                    for line in input_lines[-2:1:-1]
                 )
             )
             for col in range(1, len(input_lines[0]) - 1)
         )
         end_map = tuple(
-            (0 if not IsRoom[col - 1] else tuple(col // 2 for _ in range(room_depth)))
+            (
+                0
+                if not IsRoom[col - 1]
+                else tuple(col // 2 for _ in range(room_depth))
+            )
             for col in range(1, len(input_lines[0]) - 1)
         )
         part, map_tree = dijkstra(
@@ -160,10 +172,16 @@ def Draw(
         source = (
             parent_map
             and column != parent_map[col_i]
-            and (IsRoom[col_i] and len(column) < len(parent_map[col_i]) or column == 0)
+            and (
+                IsRoom[col_i]
+                and len(column) < len(parent_map[col_i])
+                or column == 0
+            )
         )
 
-        result[0].append("-" if IsRoom[col_i] else "*" if source else Amp(column))
+        result[0].append(
+            "-" if IsRoom[col_i] else "*" if source else Amp(column)
+        )
         for row in range(1, room_depth + 1):
             try:
                 amp = column[room_depth - row]
@@ -174,6 +192,8 @@ def Draw(
             result[row].append(
                 " "
                 if not IsRoom[col_i]
-                else "*" if source and row == room_depth - len(column) else Amp(amp)
+                else "*"
+                if source and row == room_depth - len(column)
+                else Amp(amp)
             )
     return "\n".join("".join(line) for line in result)

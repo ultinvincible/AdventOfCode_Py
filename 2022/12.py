@@ -1,4 +1,4 @@
-from helper import neighbors_2d, bf_search
+from helper import bf_search, neighbors_2d
 
 
 def height(char: str):

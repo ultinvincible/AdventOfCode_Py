@@ -32,13 +32,15 @@ def run_day(year: int, day: int):
     elif os.path.exists(year_path := f"20{year}"):
         listdir = os.listdir(year_path)
         if files := [
-            filename for filename in listdir if filename[:2] == "{:02}".format(day)
+            filename
+            for filename in listdir
+            if filename[:2] == "{:02}".format(day)
         ]:
             module = importlib.import_module(f"{year_path}.{files[0][:-3]}")
     if not module:
         raise AoCError("File not found.")
     try:
-        run: Callable[[str], tuple[int, int | str]] = getattr(module, "run", None)
+        run: Callable[[str], tuple[int, int | str]] = getattr(module, "run")
     except AttributeError:
         raise AoCError("Module does not have a 'run' method.")
 
@@ -89,7 +91,7 @@ def submit(year: int, day: int, result: tuple[int, int | str]):
     # Requested by the AoC creator at:
     # https://www.reddit.com/r/adventofcode/comments/z9dhtd/
     headers = {
-        "User-Agent": "github.com/ultinvincible/AdventOfCode_Py by trinhminhkhanh278@gmail.com",
+        "User-Agent": "github.com/ultinvincible/AdventOfCode_Py by trinhminhkhanh278@gmail.com"
     }
 
     part = 2 if result[1] else 1
@@ -161,7 +163,11 @@ if __name__ == "__main__":
         try:
             assert 1 <= (input_day := int(command[-2:])) <= 25
             if len(command) > 2:
-                assert 15 <= (input_year := int(command[:-2])) <= today.year - 2000
+                assert (
+                    15
+                    <= (input_year := int(command[:-2]))
+                    <= today.year - 2000
+                )
                 year = input_year
             day = input_day
         except (IndexError, ValueError, AssertionError):

@@ -34,14 +34,12 @@ def neighbors_2d(
     return neis
 
 
-def bf_search[
-    Key
-](
+def bf_search[Key](
     start: Key,
     get_neighbors: Callable[[Key], list[Key]],
     is_goal: Callable[[Key], bool] | None = None,
-) -> tuple[int, dict[Key, tuple[int, Key]]]:
-    """Best first search, supporting infinite graphs, and stores nodes in a dict.
+) -> tuple[int | None, dict[Key, tuple[int, Key | None]]]:
+    """Breadth first search, supporting infinite graphs, and stores nodes in a dict.
     Each key is a node, mapped to its path length and parent in the path tree.
 
     Args:
@@ -60,7 +58,7 @@ def bf_search[
     queue.put((0, start))
 
     # {node: (path_length, parent_node)}:
-    path_tree: dict[Key, tuple[int, Key]] = {start: (0, None)}
+    path_tree: dict[Key, tuple[int, Key | None]] = {start: (0, None)}
     is_goal = is_goal or (lambda _: False)
     goal_cost = None
 
@@ -71,7 +69,7 @@ def bf_search[
             break
 
         for nei in get_neighbors(current_node):
-            if not nei in explored:
+            if nei not in explored:
                 explored.add(nei)
                 path_tree[nei] = path_length + 1, current_node
                 queue.put((path_length + 1, nei))
@@ -79,13 +77,11 @@ def bf_search[
     return goal_cost, path_tree
 
 
-def dijkstra[
-    Key
-](
+def dijkstra[Key](
     start: Key,
     get_neighbors: Callable[[Key], list[tuple[int, Key]]],
     is_goal: Callable[[Key], bool] | None = None,
-) -> tuple[int, dict[Key, tuple[int, Key]]]:
+) -> tuple[int | None, dict[Key, tuple[int, Key | None]]]:
     """A dynamic implementation of Dijkstra's algorithm, supporting infinite graphs (uniform cost search),
     and terminates when no more nodes are found or the is_goal condition is True.
 
@@ -102,9 +98,9 @@ def dijkstra[
         The minimum cost to reach a goal node and dict of keys to nodes/ minimum path tree
     """
     # [(cost, key)]:
-    frontier = [(int(), start)]
+    frontier = [(0, start)]
     # {key: (cost, parent_key)} (include expanded and frontier):
-    min_path_tree: dict[Key, tuple[int, Key]] = {start: (0, None)}
+    min_path_tree: dict[Key, tuple[int, Key | None]] = {start: (0, None)}
 
     is_goal = is_goal or (lambda _: False)
     goal_cost = None
