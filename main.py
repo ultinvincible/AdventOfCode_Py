@@ -29,6 +29,21 @@ class AoCError(Exception):
     pass
 
 
+def download_input(year, day):
+    # Minimize requests
+    # https://www.reddit.com/r/adventofcode/comments/3v64sb/
+    response = requests.get(
+        f"{base_url}20{year}/day/{day}/input",
+        cookies=cookie_jar,
+    )
+    response.raise_for_status()
+    input_data = response.content.decode()
+    with open(get_input_path(year, day), "w") as file:
+        file.write(input_data)
+    print("Input downloaded.")
+    return input_data
+
+
 def run_day(year: int, day: int):
     if module := sys.modules.get(f"20{year}.{day:02}", None):
         importlib.reload(module)
@@ -47,21 +62,12 @@ def run_day(year: int, day: int):
     except AttributeError:
         raise AoCError("Module does not have a 'run' method.")
 
-    if not os.path.exists(input_path := "Inputs"):
-        os.mkdir(input_path)
-    input_path = os.path.join(input_path, f"{year}{day:02}.txt")
+    input_path = get_input_path(year, day)
     if not os.path.isfile(input_path) or os.stat(input_path).st_size == 0:
-        # Minimize requests
-        # https://www.reddit.com/r/adventofcode/comments/3v64sb/
-        response = requests.get(
-            f"{base_url}20{year}/day/{day}/input",
-            cookies=cookie_jar,
-        )
-        response.raise_for_status()
-        with open(input_path, "w") as file:
-            file.write(response.content.decode())
-    with open(input_path) as file:
-        input_data = file.read()
+        input_data = download_input(year, day)
+    else:
+        with open(input_path) as file:
+            input_data = file.read()
 
     start = time.time()
     result = run(input_data)
@@ -88,6 +94,12 @@ def run_day(year: int, day: int):
     if any(result):
         print(f"Runtime: {round(end - start, 3)} s.")
     return result
+
+
+def get_input_path(year, day):
+    if not os.path.exists(input_path := "Inputs"):
+        os.mkdir(input_path)
+    return os.path.join(input_path, f"{year}{day:02}.txt")
 
 
 def submit(year: int, day: int, result: tuple[int, int | str]):
@@ -119,6 +131,8 @@ def submit(year: int, day: int, result: tuple[int, int | str]):
     message = "".join(re.split("[<>]", html)[::2])
     # print(main)
     print(*message.split(), sep=" ")
+    if "lease wait" in message:
+        print("Current time: " + str(datetime.datetime.now()))
 
     if "That's the right answer" in re.split("[!.]", message, 1)[0]:
         with open("answers.csv", "a", newline="") as file:
@@ -182,6 +196,9 @@ if __name__ == "__main__":
             with open("template.py") as template, open(path, "w") as file:
                 file.write(template.read())
             print("File created.")
+
+            download_input(year, day)
+
             continue
 
         try:
