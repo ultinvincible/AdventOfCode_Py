@@ -14,14 +14,22 @@ import shadowcopy
 
 base_url = "https://adventofcode.com/"
 
-try:
-    cookie_jar = browser_cookie3.load(
-        domain_name="adventofcode.com",
-    )
-except shadowcopy.exceptions.RequiresAdminError:
-    cookie_jar = browser_cookie3.firefox(
-        domain_name="adventofcode.com",
-    )
+__cookie_jar = None
+
+
+def get_cookies_jar():
+    global __cookie_jar
+    if __cookie_jar is None:
+        try:
+            __cookie_jar = browser_cookie3.load(
+                domain_name="adventofcode.com",
+            )
+        except shadowcopy.exceptions.RequiresAdminError:
+            __cookie_jar = browser_cookie3.firefox(
+                domain_name="adventofcode.com",
+            )
+    return __cookie_jar
+
 
 answers: dict[tuple[int, int, int], str] = {}
 if os.path.exists("answers.csv"):
@@ -44,7 +52,7 @@ def download_input(year, day):
     # https://www.reddit.com/r/adventofcode/comments/3v64sb/
     response = requests.get(
         f"{base_url}20{year}/day/{day}/input",
-        cookies=cookie_jar,
+        cookies=get_cookies_jar(),
     )
     response.raise_for_status()
     input_data = response.content.decode()
@@ -123,7 +131,7 @@ def submit(year: int, day: int, result: tuple[int, int | str]):
     response = requests.post(
         f"{base_url}20{year}/day/{day}/answer",
         data=data,
-        cookies=cookie_jar,
+        cookies=get_cookies_jar(),
         headers=headers,
     )
     response.raise_for_status()
@@ -188,7 +196,7 @@ if __name__ == "__main__":
                 assert 15 <= (input_year := int(command[:-2])) <= today.year - 2000
                 year = input_year
             day = input_day
-        except (IndexError, ValueError, AssertionError):
+        except IndexError, ValueError, AssertionError:
             print("Invalid options provided. Exiting.")
             break
 
