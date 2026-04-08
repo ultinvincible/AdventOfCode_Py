@@ -1,0 +1,10 @@
+[project]
+name = "adventofcode-py"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "browser-cookie3==0.20.1",
+    "requests==2.31.0",
+]

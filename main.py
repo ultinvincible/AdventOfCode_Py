@@ -1,6 +1,6 @@
 import csv
 import datetime
-import importlib.util
+import importlib
 import os
 import re
 import sys
@@ -10,19 +10,29 @@ from typing import Callable
 
 import browser_cookie3
 import requests
+import shadowcopy
 
 base_url = "https://adventofcode.com/"
 
-cookie_jar = browser_cookie3.firefox(
-    domain_name="adventofcode.com",
-)
+try:
+    cookie_jar = browser_cookie3.load(
+        domain_name="adventofcode.com",
+    )
+except shadowcopy.exceptions.RequiresAdminError:
+    cookie_jar = browser_cookie3.firefox(
+        domain_name="adventofcode.com",
+    )
 
 answers: dict[tuple[int, int, int], str] = {}
-with open("answers.csv", newline="") as file:
-    reader = csv.reader(file)
-    for row in reader:
-        answer = row.pop()
-        answers[tuple(map(int, row))] = answer
+if os.path.exists("answers.csv"):
+    with open("answers.csv", newline="") as file:
+        reader = csv.reader(file)
+        for row in reader:
+            answer = row.pop()
+            answers[tuple(map(int, row))] = answer
+else:
+    with open("answers.csv", "w"):
+        pass
 
 
 class AoCError(Exception):
@@ -50,9 +60,7 @@ def run_day(year: int, day: int):
     elif os.path.exists(year_path := f"20{year}"):
         listdir = os.listdir(year_path)
         if files := [
-            filename
-            for filename in listdir
-            if filename[:2] == "{:02}".format(day)
+            filename for filename in listdir if filename[:2] == "{:02}".format(day)
         ]:
             module = importlib.import_module(f"{year_path}.{files[0][:-3]}")
     if not module:
@@ -120,7 +128,7 @@ def submit(year: int, day: int, result: tuple[int, int | str]):
     )
     response.raise_for_status()
     if not response.url.endswith("answer"):
-        print("Invalid session token.")
+        print("Authenticate on your browser to continue.")
         return
 
     main = re.split(
@@ -134,7 +142,7 @@ def submit(year: int, day: int, result: tuple[int, int | str]):
     if "lease wait" in message:
         print("Current time: " + str(datetime.datetime.now()))
 
-    if "That's the right answer" in re.split("[!.]", message, 1)[0]:
+    if "That's the right answer" in re.split("[!.]", message, maxsplit=1)[0]:
         with open("answers.csv", "a", newline="") as file:
             writer = csv.writer(file)
             for p, result_part in enumerate(result):
@@ -177,11 +185,7 @@ if __name__ == "__main__":
         try:
             assert 1 <= (input_day := int(command[-2:])) <= 25
             if len(command) > 2:
-                assert (
-                    15
-                    <= (input_year := int(command[:-2]))
-                    <= today.year - 2000
-                )
+                assert 15 <= (input_year := int(command[:-2])) <= today.year - 2000
                 year = input_year
             day = input_day
         except (IndexError, ValueError, AssertionError):
