@@ -197,7 +197,7 @@ if __name__ == "__main__":
                 year = input_year
             day = input_day
         except IndexError, ValueError, AssertionError:
-            print("Invalid options provided. Exiting.")
+            print("Invalid options provided, exiting.")
             break
 
         path = f"20{year}"
