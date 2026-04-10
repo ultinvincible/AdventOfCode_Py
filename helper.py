@@ -127,3 +127,22 @@ def dijkstra[Key](
                 )
 
     return goal_cost, min_path_tree
+
+
+def ranges_intersect(range1: tuple[int, int], range2: tuple[int, int]):
+    min1, max1 = range1
+    min2, max2 = range2
+    if min1 > max1 or min2 > max2:
+        raise Exception("Invalid ranges")
+
+    start = max(min1, min2)
+    end = min(max1, max2)
+    return (start, end) if start <= end else None
+
+
+def ranges_merge(range1: tuple[int, int], range2: tuple[int, int]):
+    min1, max1 = range1
+    min2, max2 = range2
+    return (
+        (min(min1, min2), max(max1, max2)) if ranges_intersect(range1, range2) else None
+    )

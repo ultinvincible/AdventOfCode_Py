@@ -3,7 +3,7 @@ def run(input_data: str):
 
     input_lines = input_data.splitlines()
     for l, line in enumerate(input_lines):
-        split = line.split(...)
+        split = line.split("")
         ...
 
     input_grid = [list(line) for line in input_data.splitlines()]
@@ -13,7 +13,7 @@ def run(input_data: str):
 
     input_sections = input_data.split("\n\n")
     for s, section in enumerate(input_sections):
-        split = section.split(...)
+        split = section.split("")
         ...
 
     return part1, part2

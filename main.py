@@ -3,6 +3,7 @@ import datetime
 import importlib
 import os
 import re
+import shutil
 import sys
 import time
 import traceback
@@ -47,7 +48,17 @@ class AoCError(Exception):
     pass
 
 
-def download_input(year, day):
+def get_input_path(year, day):
+    if not os.path.exists(input_path := "Inputs"):
+        os.mkdir(input_path)
+    return os.path.join(input_path, f"{year}{day:02}.txt")
+
+
+def read_or_download_input(year, day):
+    input_path = get_input_path(year, day)
+    if os.path.isfile(input_path) and os.stat(input_path).st_size != 0:
+        with open(input_path) as file:
+            return file.read()
     # Minimize requests
     # https://www.reddit.com/r/adventofcode/comments/3v64sb/
     response = requests.get(
@@ -56,7 +67,7 @@ def download_input(year, day):
     )
     response.raise_for_status()
     input_data = response.content.decode()
-    with open(get_input_path(year, day), "w") as file:
+    with open(input_path, "w") as file:
         file.write(input_data)
     print("Input downloaded.")
     return input_data
@@ -78,16 +89,11 @@ def run_day(year: int, day: int):
     except AttributeError:
         raise AoCError("Module does not have a 'run' method.")
 
-    input_path = get_input_path(year, day)
-    if not os.path.isfile(input_path) or os.stat(input_path).st_size == 0:
-        input_data = download_input(year, day)
-    else:
-        with open(input_path) as file:
-            input_data = file.read()
+    input_data = read_or_download_input(year, day)
 
-    start = time.time()
+    start = time.perf_counter()
     result = run(input_data)
-    end = time.time()
+    end = time.perf_counter()
     for part in (0, 1):
         if result[part]:
             result_part = str(result[part])
@@ -110,12 +116,6 @@ def run_day(year: int, day: int):
     if any(result):
         print(f"Runtime: {round(end - start, 3)} s.")
     return result
-
-
-def get_input_path(year, day):
-    if not os.path.exists(input_path := "Inputs"):
-        os.mkdir(input_path)
-    return os.path.join(input_path, f"{year}{day:02}.txt")
 
 
 def submit(year: int, day: int, result: tuple[int, int | str]):
@@ -205,12 +205,9 @@ if __name__ == "__main__":
             os.mkdir(path)
         path = os.path.join(path, f"{day:02}.py")
         if not os.path.isfile(path) or os.stat(path).st_size == 0:
-            with open("template.py") as template, open(path, "w") as file:
-                file.write(template.read())
+            shutil.copyfile("template.py", path)
             print("File created.")
-
-            download_input(year, day)
-
+            read_or_download_input(year, day)
             continue
 
         try:
