@@ -11,7 +11,6 @@ from typing import Callable
 
 import browser_cookie3
 import requests
-import shadowcopy
 
 base_url = "https://adventofcode.com/"
 
@@ -25,10 +24,12 @@ def get_cookies_jar():
             __cookie_jar = browser_cookie3.load(
                 domain_name="adventofcode.com",
             )
-        except shadowcopy.exceptions.RequiresAdminError:
+        except Exception:
             __cookie_jar = browser_cookie3.firefox(
                 domain_name="adventofcode.com",
             )
+            if not __cookie_jar._cookies:
+                raise AoCError("Could not get cookies from browsers")
     return __cookie_jar
 
 
@@ -65,7 +66,12 @@ def read_or_download_input(year, day):
         f"{base_url}20{year}/day/{day}/input",
         cookies=get_cookies_jar(),
     )
-    response.raise_for_status()
+    try:
+        response.raise_for_status()
+    except Exception:
+        print(response.text)
+        raise
+
     input_data = response.content.decode()
     with open(input_path, "w") as file:
         file.write(input_data)
@@ -114,7 +120,7 @@ def run_day(year: int, day: int):
         else:
             print("No result")
     if any(result):
-        print(f"Runtime: {round(end - start, 3)} s.")
+        print(f"Runtime: {round(end - start, 3)} s")
     return result
 
 
