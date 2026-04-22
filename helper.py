@@ -2,6 +2,21 @@ import heapq
 import math
 from queue import SimpleQueue
 from typing import Callable
+import sys
+
+
+def is_debug_active():
+    # Check traditional trace (pdb/older IDEs)
+    if hasattr(sys, "gettrace") and sys.gettrace() is not None:
+        return True
+    # Check Python 3.12+ Monitoring API
+    try:
+        if sys.monitoring.get_tool(sys.monitoring.DEBUGGER_ID) is not None:
+            return True
+    except AttributeError, ValueError:
+        pass
+    return False
+
 
 __directions = [(0, 1), (-1, 0), (0, -1), (1, 0)]
 __diagonals = [(1, 1), (1, -1), (-1, 1), (-1, -1)]
